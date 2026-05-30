@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>หมากฮอส ไทย — Skill Edition</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap');
+:root{--bg:#0f0f1a;--surface:#1a1a2e;--surface2:#16213e;--a1:#e94560;--a2:#0f3460;--a3:#533483;--gold:#ffd700;--text:#e0e0f0;--muted:#888aaa;--cl:#2a2a4a;--cd:#111128;--bb:#533483;--p1:#e94560;--p2:#00d4ff;--p1g:rgba(233,69,96,.6);--p2g:rgba(0,212,255,.6)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Kanit',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+h1{font-size:clamp(18px,4vw,30px);font-weight:700;color:var(--gold);text-align:center;margin-bottom:2px;letter-spacing:2px}
+.sub{font-size:11px;color:var(--muted);margin-bottom:12px;text-align:center;font-family:'Space Mono',monospace}
+#lobby{background:var(--surface);border:1px solid var(--bb);border-radius:16px;padding:28px;max-width:400px;width:100%;text-align:center;display:flex;flex-direction:column;gap:14px}
+.ltitle{font-size:20px;font-weight:700;color:var(--gold)}
+.lsub{font-size:13px;color:var(--muted)}
+.btn{background:linear-gradient(135deg,var(--a1),var(--a3));border:none;color:#fff;font-family:'Kanit',sans-serif;font-size:15px;font-weight:600;padding:12px 20px;border-radius:10px;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(233,69,96,.4)}
+.btn.sec{background:var(--surface2);border:1px solid var(--bb);color:var(--text)}
+.btn.sec:hover{box-shadow:0 6px 20px rgba(83,52,131,.4)}
+.code-box{background:var(--cd);border:1px solid var(--a3);border-radius:8px;padding:12px;font-family:'Space Mono',monospace;font-size:26px;font-weight:700;color:var(--gold);letter-spacing:8px;text-align:center}
+#join-input{background:var(--cd);border:1px solid var(--bb);border-radius:8px;color:var(--text);font-family:'Space Mono',monospace;font-size:20px;text-align:center;letter-spacing:6px;padding:12px;width:100%;text-transform:uppercase}
+#join-input:focus{outline:none;border-color:var(--gold)}
+#ls{font-size:13px;color:var(--muted);min-height:20px}
+#game{display:none;flex-direction:column;align-items:center;gap:8px;width:100%;max-width:520px}
+.topbar{display:flex;justify-content:space-between;align-items:center;width:100%;background:var(--surface);border-radius:10px;padding:8px 12px;border:1px solid var(--bb)}
+.pinfo{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.dot{width:12px;height:12px;border-radius:50%}
+.d1{background:var(--p1);box-shadow:0 0 8px var(--p1g)}
+.d2{background:var(--p2);box-shadow:0 0 8px var(--p2g)}
+.tlabel{font-size:13px;color:var(--gold);font-weight:700;text-align:center}
+.tcnt{font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;text-align:center}
+#board{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding:8px;background:var(--surface2);border:2px solid var(--bb);border-radius:12px;width:100%;box-shadow:0 0 30px rgba(83,52,131,.3)}
+.cell{aspect-ratio:1;border-radius:3px;display:flex;align-items:center;justify-content:center;position:relative;transition:background .15s;cursor:default}
+.cell.dk{background:var(--cd)}
+.cell.lt{background:var(--cl)}
+.cell.sel{background:rgba(255,215,0,.2);outline:2px solid var(--gold)}
+.cell.hint{background:rgba(0,255,128,.15);cursor:pointer}
+.cell.hint::after{content:'';position:absolute;width:30%;height:30%;border-radius:50%;background:rgba(0,255,128,.5)}
+.piece{width:78%;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(7px,1.6vw,12px);font-weight:700;position:relative;cursor:pointer;transition:transform .15s;user-select:none;z-index:2}
+.piece.p1{background:radial-gradient(circle at 35% 35%,#ff6b80,var(--p1));color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.5),0 0 10px var(--p1g);border:2px solid rgba(255,255,255,.3)}
+.piece.p2{background:radial-gradient(circle at 35% 35%,#88eeff,var(--p2));color:#003344;box-shadow:0 3px 8px rgba(0,0,0,.5),0 0 10px var(--p2g);border:2px solid rgba(255,255,255,.3)}
+.piece.king::after{content:'♛';position:absolute;top:-4px;left:50%;transform:translateX(-50%);font-size:clamp(6px,1.3vw,10px);color:var(--gold);text-shadow:0 0 4px #000}
+.piece.frozen{opacity:.6}
+.piece.frozen::before{content:'❄';position:absolute;font-size:clamp(7px,1.4vw,11px)}
+.piece:hover:not(.frozen){transform:scale(1.1)}
+.skillbar{width:100%;background:var(--surface);border:1px solid var(--bb);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:6px}
+.stitle{font-size:11px;color:var(--muted);font-family:'Space Mono',monospace}
+.sgrid{display:flex;flex-wrap:wrap;gap:6px}
+.skbtn{background:#1e1e3a;border:1px solid var(--bb);border-radius:7px;color:var(--text);font-family:'Kanit',sans-serif;font-size:12px;padding:5px 9px;cursor:pointer;display:flex;align-items:center;gap:4px;transition:background .15s,transform .1s}
+.skbtn:hover:not(:disabled){background:var(--a3);border-color:var(--gold);transform:translateY(-1px)}
+.skbtn:disabled{opacity:.35;cursor:not-allowed}
+.skbtn.act{background:var(--a1);border-color:var(--a1);color:#fff}
+.cdnum{font-family:'Space Mono',monospace;font-size:10px;color:var(--gold);background:rgba(0,0,0,.4);padding:1px 4px;border-radius:3px}
+.statusbar{width:100%;background:var(--surface);border:1px solid var(--bb);border-radius:10px;padding:8px 12px;font-size:13px;text-align:center;min-height:36px;display:flex;align-items:center;justify-content:center}
+.statusbar.warn{border-color:var(--a1);color:var(--a1)}
+.statusbar.ok{border-color:#00d455;color:#00d455}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.obox{background:var(--surface);border:2px solid var(--gold);border-radius:16px;padding:28px;text-align:center;max-width:320px;width:90%;display:flex;flex-direction:column;gap:14px}
+.otitle{font-size:26px;font-weight:700;color:var(--gold)}
+.osub{font-size:14px;color:var(--text)}
+.waiting::after{content:'';animation:dots 1.2s infinite}
+@keyframes dots{0%{content:''}33%{content:'.'}66%{content:'..'}100%{content:'...'}}
+</style>
+</head>
+<body>
+<h1>⚔ หมากฮอส ไทย</h1>
+<p class="sub">SKILL EDITION — MULTIPLAYER</p>
+
+<div id="lobby">
+  <div class="ltitle">🎮 เลือกโหมด</div>
+  <button class="btn" onclick="createRoom()">🏠 สร้างห้อง (ผู้เล่น 1)</button>
+  <div style="font-size:12px;color:var(--muted)">— หรือ —</div>
+  <div id="join-sec" style="display:flex;flex-direction:column;gap:8px">
+    <input id="join-input" maxlength="6" placeholder="รหัสห้อง 6 ตัว" oninput="this.value=this.value.toUpperCase()">
+    <button class="btn sec" onclick="joinRoom()">🔗 เข้าร่วมห้อง (ผู้เล่น 2)</button>
+  </div>
+  <div style="border-top:1px solid var(--bb);padding-top:12px">
+    <button class="btn sec" onclick="startSolo()">🤖 เล่นคนเดียว (AI)</button>
+  </div>
+  <div id="ls"></div>
+</div>
+
+<div id="game">
+  <div class="topbar">
+    <div class="pinfo"><div class="dot d1"></div><span id="p1n">ผู้เล่น 1</span>&nbsp;<span id="p1c" style="font-size:11px;color:var(--muted)">×8</span></div>
+    <div><div class="tlabel" id="tlabel">—</div><div class="tcnt" id="tcnt">เทิร์นที่ 1</div></div>
+    <div class="pinfo"><span id="p2c" style="font-size:11px;color:var(--muted)">×8</span>&nbsp;<span id="p2n">ผู้เล่น 2</span><div class="dot d2" style="margin-left:6px"></div></div>
+  </div>
+  <div id="board"></div>
+  <div class="skillbar" id="skillbar">
+    <div class="stitle">🎴 สกิล</div>
+    <div class="sgrid" id="sgrid"></div>
+  </div>
+  <div class="statusbar" id="sbar">รอ...</div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="obox">
+    <div class="otitle" id="otitle">🏆</div>
+    <div class="osub" id="osub"></div>
+    <button class="btn" onclick="location.reload()">เล่นใหม่</button>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────
+let myP = 0, roomCode = '', gs = null, selPiece = null, actSkill = null, dualFirst = null, soloMode = false, pollTimer = null;
+const SKILLS=[{id:'freeze',icon:'❄️',lbl:'แช่แข็ง'},{id:'backward',icon:'↩️',lbl:'ถอยหลัง'},{id:'double',icon:'⚡',lbl:'2 ช่อง'},{id:'dual',icon:'👥',lbl:'2 ตัว'},{id:'push',icon:'💥',lbl:'ผลัก'}];
+const SCD={freeze:3,backward:2,double:2,dual:3,push:2};
+
+// ── ROOM KEY HELPERS ──
+function storeKey(code){ return 'thc_state_'+code; }
+function lobbyKey(code){ return 'thc_lobby_'+code; }
+
+// ── LOBBY ──
+function setLS(msg){document.getElementById('ls').innerHTML=msg;}
+function createRoom(){
+  roomCode=randCode(); myP=1;
+  localStorage.setItem(lobbyKey(roomCode),JSON.stringify({p1:true,p2:false}));
+  setLS(`<div style="margin:4px 0 2px;font-size:12px;color:var(--muted)">รหัสห้อง — ส่งให้เพื่อน</div><div class="code-box">${roomCode}</div><div style="font-size:12px;color:var(--muted);margin-top:6px">รอผู้เล่น 2 เข้าร่วม<span class="waiting"></span></div>`);
+  // Poll for P2 joining
+  pollTimer=setInterval(()=>{
+    const lb=JSON.parse(localStorage.getItem(lobbyKey(roomCode))||'{}');
+    if(lb.p2){clearInterval(pollTimer);startGame();}
+  },500);
+}
+function joinRoom(){
+  const code=document.getElementById('join-input').value.trim().toUpperCase();
+  if(code.length<4){alert('ใส่รหัสห้อง');return;}
+  const lb=JSON.parse(localStorage.getItem(lobbyKey(code))||'{}');
+  if(!lb.p1){alert('ไม่พบห้องนี้ หรือรหัสผิด');return;}
+  roomCode=code; myP=2;
+  // Signal P1
+  lb.p2=true; localStorage.setItem(lobbyKey(roomCode),JSON.stringify(lb));
+  setLS('เชื่อมต่อแล้ว รอเกมเริ่ม<span class="waiting"></span>');
+  // Poll for game state
+  pollTimer=setInterval(()=>{
+    const raw=localStorage.getItem(storeKey(roomCode));
+    if(raw){clearInterval(pollTimer);gs=JSON.parse(raw);showGame();renderGame();}
+  },400);
+}
+function startSolo(){myP=1;soloMode=true;startGame();}
+function randCode(){return Math.random().toString(36).slice(2,8).toUpperCase();}
+
+// ── GAME INIT ──
+function makeState(){
+  const board=Array.from({length:8},()=>Array(8).fill(null));
+  for(let r=0;r<2;r++) for(let c=0;c<8;c++) if((r+c)%2===1) board[r][c]={pl:1,king:false,fr:0};
+  for(let r=6;r<8;r++) for(let c=0;c<8;c++) if((r+c)%2===1) board[r][c]={pl:2,king:false,fr:0};
+  return{board,turn:1,tn:1,ncap:0,sk:{1:{freeze:0,backward:0,double:0,dual:0,push:0},2:{freeze:0,backward:0,double:0,dual:0,push:0}}};
+}
+function startGame(){gs=makeState();saveState();showGame();renderGame();startPoll();}
+function showGame(){document.getElementById('lobby').style.display='none';document.getElementById('game').style.display='flex';}
+function saveState(){if(roomCode) localStorage.setItem(storeKey(roomCode),JSON.stringify(gs));}
+function startPoll(){
+  if(soloMode||!roomCode)return;
+  setInterval(()=>{
+    if(gs.turn===myP)return; // my turn, don't overwrite
+    const raw=localStorage.getItem(storeKey(roomCode));
+    if(!raw)return;
+    const fresh=JSON.parse(raw);
+    if(fresh.tn!==gs.tn||(fresh.turn!==gs.turn)){gs=fresh;renderGame();checkEnd();}
+  },400);
+}
+
+// ── RENDER ──
+function renderGame(){
+  const B=document.getElementById('board');
+  B.innerHTML='';
+  const flip=(myP===2);
+  let c1=0,c2=0;
+  for(let r=0;r<8;r++) for(let c=0;c<8;c++){const p=gs.board[r][c];if(p){p.pl===1?c1++:c2++;}}
+  document.getElementById('p1c').textContent='×'+c1;
+  document.getElementById('p2c').textContent='×'+c2;
+  document.getElementById('tlabel').textContent='เทิร์น: ผู้เล่น '+gs.turn;
+  document.getElementById('tcnt').textContent='เทิร์นที่ '+gs.tn+' | ไม่กิน: '+gs.ncap;
+
+  const vm=getValidMoves();
+
+  for(let ri=0;ri<8;ri++) for(let ci=0;ci<8;ci++){
+    const r=flip?7-ri:ri, c=flip?7-ci:ci;
+    const cell=document.createElement('div');
+    cell.className='cell '+((r+c)%2===0?'lt':'dk');
+    cell.dataset.r=r; cell.dataset.c=c;
+
+    if(selPiece&&selPiece.r===r&&selPiece.c===c) cell.classList.add('sel');
+    if(selPiece&&vm[selPiece.r]&&vm[selPiece.r][selPiece.c]){
+      if((vm[selPiece.r][selPiece.c]).find(([tr,tc])=>tr===r&&tc===c)){
+        cell.classList.add('hint');
+        cell.addEventListener('click',()=>onCellClick(r,c));
+      }
+    }
+
+    const piece=gs.board[r][c];
+    if(piece){
+      const pd=document.createElement('div');
+      pd.className='piece p'+piece.pl+(piece.king?' king':'')+(piece.fr>0?' frozen':'');
+      pd.addEventListener('click',e=>{e.stopPropagation();onPieceClick(r,c);});
+      cell.appendChild(pd);
+    }
+    cell.addEventListener('click',()=>onBgClick(r,c));
+    B.appendChild(cell);
+  }
+  renderSkills();
+  updateStatus();
+}
+
+// ── CLICK HANDLERS ──
+function onPieceClick(r,c){
+  if(!isMyTurn())return;
+  const piece=gs.board[r][c];
+  if(!piece)return;
+  if(actSkill==='freeze'&&piece.pl!==gs.turn){applyFreeze(r,c);return;}
+  if(actSkill==='push'&&piece.pl!==gs.turn){applyPush(r,c);return;}
+  if(actSkill==='dual'){
+    if(piece.pl===gs.turn){
+      if(!dualFirst){dualFirst={r,c};selPiece={r,c};setStatus('เลือกตัวที่ 2 ของตัวเอง','ok');renderGame();return;}
+      else{
+        // second piece selected, now need destination for piece 1
+        const sec={r,c};
+        // move piece 1 then piece 2
+        doDualMove(dualFirst,sec);
+        return;
+      }
+    }
+  }
+  if(piece.pl!==gs.turn)return;
+  if(actSkill==='backward'){selPiece={r,c};showBackwardHints(r,c);return;}
+  if(actSkill==='double'){selPiece={r,c};showDoubleHints(r,c);return;}
+  selPiece={r,c};
+  renderGame();
+}
+function onCellClick(r,c){
+  if(!isMyTurn()||!selPiece)return;
+  const{r:sr,c:sc}=selPiece;
+  const vm=getValidMoves();
+  if(vm[sr]&&vm[sr][sc]&&vm[sr][sc].find(([tr,tc])=>tr===r&&tc===c)){
+    execMove(sr,sc,r,c);selPiece=null;
+  }
+}
+function onBgClick(r,c){
+  if(selPiece&&selPiece.r===r&&selPiece.c===c){selPiece=null;actSkill=null;dualFirst=null;renderGame();}
+}
+
+// ── MOVE LOGIC ──
+function getValidMoves(brd,turn,allDir){
+  brd=brd||gs.board; turn=turn||gs.turn;
+  const moves={},caps={};
+  let hasCap=false;
+  const dir=turn===1?1:-1;
+  for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+    const p=brd[r][c];
+    if(!p||p.pl!==turn||p.fr>0)continue;
+    const cm=capMoves(brd,r,c,dir,p.king,turn);
+    if(cm.length){hasCap=true;if(!caps[r])caps[r]={};caps[r][c]=cm;}
+  }
+  if(hasCap)return caps;
+  for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+    const p=brd[r][c];
+    if(!p||p.pl!==turn||p.fr>0)continue;
+    const nm=normMoves(brd,r,c,dir,p.king,allDir);
+    if(nm.length){if(!moves[r])moves[r]={};moves[r][c]=nm;}
+  }
+  return moves;
+}
+function capMoves(brd,r,c,dir,king,turn){
+  const res=[],dirs=king?[[1,1],[1,-1],[-1,1],[-1,-1]]:[[dir,1],[dir,-1]];
+  for(const[dr,dc]of dirs){const mr=r+dr,mc=c+dc,lr=r+dr*2,lc=c+dc*2;if(inB(mr,mc)&&inB(lr,lc)){const mid=brd[mr][mc],land=brd[lr][lc];if(mid&&mid.pl!==turn&&!land)res.push([lr,lc]);}}
+  return res;
+}
+function normMoves(brd,r,c,dir,king,allDir){
+  const res=[],dirs=(king||allDir)?[[1,1],[1,-1],[-1,1],[-1,-1]]:[[dir,1],[dir,-1]];
+  for(const[dr,dc]of dirs){const nr=r+dr,nc=c+dc;if(inB(nr,nc)&&!brd[nr][nc])res.push([nr,nc]);}
+  return res;
+}
+function inB(r,c){return r>=0&&r<8&&c>=0&&c<8;}
+
+function execMove(fr,fc,tr,tc,skipEnd){
+  const brd=gs.board,piece=brd[fr][fc];
+  let cap=false;
+  const dr=tr-fr,dc=tc-fc;
+  if(Math.abs(dr)===2){const mr=fr+dr/2,mc=fc+dc/2;if(brd[mr][mc]&&brd[mr][mc].pl!==piece.pl){brd[mr][mc]=null;cap=true;gs.ncap=0;}}
+  brd[tr][tc]=piece;brd[fr][fc]=null;
+  if(!cap)gs.ncap++;
+  if((piece.pl===1&&tr===7)||(piece.pl===2&&tr===0))piece.king=true;
+  for(let r=0;r<8;r++) for(let c=0;c<8;c++){if(brd[r][c]&&brd[r][c].fr>0)brd[r][c].fr--;}
+  const sk=gs.sk[gs.turn];for(const k of Object.keys(sk))if(sk[k]>0)sk[k]--;
+  if(!skipEnd){endTurn();}else{saveState();renderGame();}
+}
+
+function endTurn(){
+  gs.turn=gs.turn===1?2:1;gs.tn++;
+  selPiece=null;actSkill=null;dualFirst=null;
+  saveState();renderGame();checkEnd();
+}
+
+// ── SKILLS ──
+function renderSkills(){
+  const grid=document.getElementById('sgrid');
+  grid.innerHTML='';
+  const bar=document.getElementById('skillbar');
+  if(!isMyTurn()){bar.style.opacity='.4';return;}
+  bar.style.opacity='1';
+  const sk=gs.sk[gs.turn];
+  SKILLS.forEach(s=>{
+    const cd=sk[s.id];
+    const b=document.createElement('button');
+    b.className='skbtn'+(actSkill===s.id?' act':'');
+    b.disabled=cd>0;
+    b.innerHTML=`${s.icon} ${s.lbl}${cd>0?`<span class="cdnum">${cd}</span>`:''}`;
+    b.onclick=()=>toggleSkill(s.id);
+    grid.appendChild(b);
+  });
+}
+function toggleSkill(id){
+  if(actSkill===id){actSkill=null;dualFirst=null;selPiece=null;renderGame();setStatus('ยกเลิกสกิล');return;}
+  actSkill=id;selPiece=null;dualFirst=null;
+  const msgs={freeze:'คลิกตัวศัตรูที่ต้องการแช่แข็ง',backward:'คลิกตัวเองเพื่อเดินถอยหลัง',double:'คลิกตัวเองเพื่อเดิน 2 ช่อง',dual:'คลิกตัวที่ 1 ของตัวเอง',push:'คลิกตัวศัตรูที่ต้องการผลัก'};
+  setStatus(msgs[id],'ok');renderGame();
+}
+
+function applyFreeze(r,c){gs.board[r][c].fr=2;useSCD('freeze');actSkill=null;setStatus('❄️ แช่แข็งสำเร็จ!','ok');endTurn();}
+function applyPush(r,c){
+  const piece=gs.board[r][c];
+  const pushDir=piece.pl===1?-1:1;
+  const nr=r+pushDir;
+  if(inB(nr,c)&&!gs.board[nr][c]){gs.board[nr][c]=piece;gs.board[r][c]=null;useSCD('push');actSkill=null;setStatus('💥 ผลักสำเร็จ!','ok');endTurn();}
+  else{setStatus('ไม่สามารถผลักได้','warn');actSkill=null;renderGame();}
+}
+
+function showBackwardHints(r,c){
+  renderGame();
+  const dir=gs.turn===1?1:-1,backDir=-dir,brd=gs.board;
+  const ms=[];
+  [[backDir,1],[backDir,-1]].forEach(([dr,dc])=>{const nr=r+dr,nc=c+dc;if(inB(nr,nc)&&!brd[nr][nc])ms.push([nr,nc]);const mr=r+dr,mc=c+dc,lr=r+dr*2,lc=c+dc*2;if(inB(mr,mc)&&inB(lr,lc)&&brd[mr][mc]&&brd[mr][mc].pl!==gs.turn&&!brd[lr][lc])ms.push([lr,lc]);});
+  document.querySelectorAll('.cell').forEach(cell=>{
+    const cr=+cell.dataset.r,cc=+cell.dataset.c;
+    if(ms.find(([tr,tc])=>tr===cr&&tc===cc)){cell.classList.add('hint');cell.onclick=()=>{useSCD('backward');execMove(r,c,cr,cc);actSkill=null;};}
+  });
+}
+function showDoubleHints(r,c){
+  renderGame();
+  const dir=gs.turn===1?1:-1,brd=gs.board;
+  const ms=[];
+  [[dir,1],[dir,-1]].forEach(([dr,dc])=>{const nr=r+dr*2,nc=c+dc*2;if(inB(nr,nc)&&!brd[r+dr][c+dc]&&!brd[nr][nc])ms.push([nr,nc]);});
+  document.querySelectorAll('.cell').forEach(cell=>{
+    const cr=+cell.dataset.r,cc=+cell.dataset.c;
+    if(ms.find(([tr,tc])=>tr===cr&&tc===cc)){cell.classList.add('hint');cell.onclick=()=>{useSCD('double');execMove(r,c,cr,cc,true);gs.ncap++;actSkill=null;endTurn();};}
+  });
+}
+
+// Dual: move piece1, then piece2 consecutively
+function doDualMove(p1,p2){
+  // let user choose destination for p1, then p2
+  selPiece=p1;
+  renderGame();
+  // Intercept next hint click for p1
+  const doFirst=()=>{
+    document.querySelectorAll('.cell.hint').forEach(cell=>{
+      cell.onclick=null;
+      cell.onclick=()=>{
+        const tr=+cell.dataset.r,tc=+cell.dataset.c;
+        execMove(p1.r,p1.c,tr,tc,true);
+        useSCD('dual');actSkill=null;dualFirst=null;
+        // Now move p2
+        selPiece=p2;renderGame();
+        // p2 might have moved if p1 pushed it, check
+        if(!gs.board[p2.r][p2.c]||gs.board[p2.r][p2.c].pl!==gs.turn){endTurn();return;}
+        setStatus('เลือกที่ลงสำหรับตัวที่ 2','ok');
+        document.querySelectorAll('.cell.hint').forEach(c2=>{
+          c2.onclick=()=>{
+            const tr2=+c2.dataset.r,tc2=+c2.dataset.c;
+            execMove(p2.r,p2.c,tr2,tc2);
+          };
+        });
+      };
+    });
+  };
+  // Short delay for render
+  setTimeout(doFirst,50);
+}
+
+function useSCD(sk){gs.sk[gs.turn][sk]=SCD[sk];}
+
+// ── AI (solo) ──
+function aiMove(){
+  if(gs.turn!==2||!soloMode)return;
+  setTimeout(()=>{
+    const vm=getValidMoves();
+    const pieces=Object.keys(vm);
+    if(!pieces.length){endTurn();return;}
+    const r=+pieces[Math.floor(Math.random()*pieces.length)];
+    const cols=Object.keys(vm[r]);
+    const c=+cols[Math.floor(Math.random()*cols.length)];
+    const moves=vm[r][c];
+    const[tr,tc]=moves[Math.floor(Math.random()*moves.length)];
+    execMove(r,c,tr,tc);
+  },600);
+}
+
+// ── END CONDITION ──
+function checkEnd(){
+  let c1=0,c2=0;
+  for(let r=0;r<8;r++) for(let c=0;c<8;c++){const p=gs.board[r][c];if(p){p.pl===1?c1++:c2++;}}
+  if(c1===0){over(2,'ผู้เล่น 1 ไม่มีตัวเหลือ');return;}
+  if(c2===0){over(1,'ผู้เล่น 2 ไม่มีตัวเหลือ');return;}
+  const vm=getValidMoves();
+  if(!Object.keys(vm).length){over(gs.turn===1?2:1,'ผู้เล่น '+gs.turn+' ไม่มีการเดิน');return;}
+  if(gs.ncap>=20){
+    if(c1>c2)over(1,'ครบ 20 เทิร์น — ผู้เล่น 1 มีตัวมากกว่า');
+    else if(c2>c1)over(2,'ครบ 20 เทิร์น — ผู้เล่น 2 มีตัวมากกว่า');
+    else over(0,'ครบ 20 เทิร์น — เสมอ!');
+    return;
+  }
+  if(soloMode&&gs.turn===2)aiMove();
+}
+function over(w,reason){
+  document.getElementById('otitle').textContent=w===0?'🤝 เสมอ!':'🏆 ผู้เล่น '+w+' ชนะ!';
+  document.getElementById('osub').textContent=reason;
+  document.getElementById('overlay').classList.add('show');
+}
+
+// ── STATUS ──
+function isMyTurn(){return soloMode?gs.turn===1:gs&&gs.turn===myP;}
+function setStatus(msg,type=''){const b=document.getElementById('sbar');b.textContent=msg;b.className='statusbar'+(type?' '+type:'');}
+function updateStatus(){
+  if(!gs)return;
+  if(isMyTurn())setStatus('ตาของคุณ — คลิกตัวเพื่อเดิน หรือเลือกสกิล','ok');
+  else setStatus('รอผู้เล่น '+gs.turn+'<span class="waiting"></span>');
+}
+</script>
+</body>
+</html>
